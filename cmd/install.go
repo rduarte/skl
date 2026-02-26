@@ -67,6 +67,11 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("erro ao registrar skill no %s: %w", manifest.FileName, err)
 	}
 
-	fmt.Printf("📋 Skill registrada no %s\n", manifest.FileName)
+	// 6. Update sklfile.lock
+	if err := mf.SaveLock(); err != nil {
+		return fmt.Errorf("erro ao atualizar %s: %w", manifest.LockFileName, err)
+	}
+
+	fmt.Printf("📋 Skill registrada no %s e %s\n", manifest.FileName, manifest.LockFileName)
 	return nil
 }

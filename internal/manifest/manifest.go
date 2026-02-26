@@ -6,9 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const FileName = "sklfile.json"
+const LockFileName = "sklfile.lock"
 
 // Manifest represents the sklfile.json file.
 // Keys are full skill references (e.g. "bitbucket@user/repo/skill"),
@@ -84,10 +86,78 @@ func (m *Manifest) SortedSources() []string {
 	return sources
 }
 
+// LoadLock reads the lock file (sklfile.lock). Returns empty manifest if absent.
+func LoadLock() (*Manifest, error) {
+	return loadFile(LockFileName)
+}
+
+// SaveLock writes the lock file (sklfile.lock).
+func (m *Manifest) SaveLock() error {
+	return m.saveFile(LockFileName)
+}
+
+// SkillName extracts the skill name (last path segment) from a source key.
+// e.g. "bitbucket@servicos-1doc/1doc-apis/1doc-api-expert" → "1doc-api-expert"
+func SkillName(source string) string {
+	parts := strings.Split(source, "/")
+	if len(parts) == 0 {
+		return source
+	}
+	return parts[len(parts)-1]
+}
+
 func filePath() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("erro ao obter diretório atual: %w", err)
 	}
 	return filepath.Join(cwd, FileName), nil
+}
+
+func loadFile(name string) (*Manifest, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("erro ao obter diretório atual: %w", err)
+	}
+
+	path := filepath.Join(cwd, name)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &Manifest{Skills: make(map[string]string)}, nil
+		}
+		return nil, fmt.Errorf("erro ao ler %s: %w", name, err)
+	}
+
+	var m Manifest
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, fmt.Errorf("erro ao interpretar %s: %w", name, err)
+	}
+
+	if m.Skills == nil {
+		m.Skills = make(map[string]string)
+	}
+
+	return &m, nil
+}
+
+func (m *Manifest) saveFile(name string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("erro ao obter diretório atual: %w", err)
+	}
+
+	path := filepath.Join(cwd, name)
+	data, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return fmt.Errorf("erro ao serializar %s: %w", name, err)
+	}
+
+	data = append(data, '\n')
+
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("erro ao gravar %s: %w", name, err)
+	}
+
+	return nil
 }

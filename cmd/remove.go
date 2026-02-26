@@ -66,7 +66,11 @@ func runRemove(cmd *cobra.Command, args []string) error {
 		if err := mf.Save(); err != nil {
 			return fmt.Errorf("erro ao atualizar %s: %w", manifest.FileName, err)
 		}
-		fmt.Printf("📋 Removida do %s: %s\n", manifest.FileName, matchedKey)
+		// Update lock file
+		if err := mf.SaveLock(); err != nil {
+			return fmt.Errorf("erro ao atualizar %s: %w", manifest.LockFileName, err)
+		}
+		fmt.Printf("📋 Removida do %s e %s: %s\n", manifest.FileName, manifest.LockFileName, matchedKey)
 		removed = true
 	}
 

@@ -208,8 +208,16 @@ O `sklfile.json` é o arquivo de manifesto que lista todas as skills do projeto.
 | `"*"`     | Usa a branch padrão do repositório (latest)|
 | `"v1.2.0"`| Versão fixa (tag Git)                     |
 
+### Bloqueio de versões (`sklfile.lock`)
+
+O `sklfile.lock` registra o estado exato das skills que estão instaladas. Ele é usado pelo comando `update` para calcular o diff entre o que você **deseja** (`sklfile.json`) e o que você **tem** (`sklfile.lock`).
+
+**Por que o lock é importante?**
+1. **Segurança**: Garante que todos os desenvolvedores do time tenham exatamente as mesmas versões.
+2. **Sincronização**: Permite que o `skl update` remova automaticamente skills que foram deletadas do manifesto por outros desenvolvedores.
+
 > [!IMPORTANT]
-> Inclua o `sklfile.json` no controle de versão do seu projeto. Assim, qualquer colaborador pode rodar `skl update` para instalar as mesmas skills.
+> Assim como no Composer (`composer.lock`) ou NPM (`package-lock.json`), você **deve** versionar o `sklfile.lock` no seu repositório.
 
 ---
 

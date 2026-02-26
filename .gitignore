@@ -11,6 +11,7 @@ skl-linux-*
 # OS
 .DS_Store
 
-# Skills & manifest (project-specific, not part of skl source)
-.agent/skills/
+# Skills instaladas (gerenciadas pelo sklfile.json, não versionadas)
+.agent/skills/*
+!.agent/skills/skl-contributor/
 sklfile.json

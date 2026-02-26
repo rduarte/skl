@@ -274,4 +274,4 @@ skl --version
 
 ## Licença
 
-[Apache-2.0](LICENSE)
+[CC0 1.0 Universal](LICENSE)

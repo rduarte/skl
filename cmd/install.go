@@ -123,7 +123,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// 5. Register in sklfile.json
+	// 6. Register in sklfile.json
 	// Key: provider@user/repo/skill  Value: tag (or empty)
 	source := fmt.Sprintf("%s@%s/%s/%s", ref.Provider, ref.User, ref.Repo, ref.Skill)
 	mf, err := manifest.Load()
@@ -140,11 +140,28 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("erro ao registrar skill no %s: %w", manifest.FileName, err)
 	}
 
-	// 6. Update sklfile.lock
-	if err := mf.SaveLock(); err != nil {
+	// 7. Update sklfile.lock with the exact commit hash
+	lock, err := manifest.LoadLock()
+	if err != nil {
+		return fmt.Errorf("erro ao carregar %s: %w", manifest.LockFileName, err)
+	}
+
+	// Local skills don't have a remote hash
+	if ref.Provider == "local" {
+		lock.Skills[source] = "*"
+	} else {
+		hash, err := installer.ResolveRef(cloneURL, ref.Tag)
+		if err != nil {
+			fmt.Printf("⚠️  Aviso: Não foi possível resolver o hash remoto para o %s: %v\n", manifest.LockFileName, err)
+			hash = gitRef // Fallback to symbolic ref
+		}
+		lock.Skills[source] = hash
+	}
+
+	if err := lock.SaveLock(); err != nil {
 		return fmt.Errorf("erro ao atualizar %s: %w", manifest.LockFileName, err)
 	}
 
-	fmt.Printf("📋 Skill registrada no %s e %s\n", manifest.FileName, manifest.LockFileName)
+	fmt.Printf("🔒 Skill bloqueada com hash no %s\n", manifest.LockFileName)
 	return nil
 }

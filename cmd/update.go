@@ -53,8 +53,39 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Compute diff
-	toInstall, toRemove, toUpgrade := diffManifests(desired, locked)
+	// Resolve hashes for desired state to detect remote changes
+	fmt.Println("🔍 Verificando atualizações remotas...")
+	resolvedDesired := &manifest.Manifest{Skills: make(map[string]string)}
+	for source, gitRef := range desired.Skills {
+		if strings.HasPrefix(source, "local@") {
+			resolvedDesired.Skills[source] = gitRef
+			continue
+		}
+
+		ref, err := parser.Parse(source)
+		if err != nil {
+			resolvedDesired.Skills[source] = gitRef
+			continue
+		}
+
+		prov, err := provider.New(ref.Provider)
+		if err != nil {
+			resolvedDesired.Skills[source] = gitRef
+			continue
+		}
+
+		cloneURL := prov.CloneURL(ref.User, ref.Repo)
+		hash, err := installer.ResolveRef(cloneURL, gitRef)
+		if err != nil {
+			fmt.Printf("⚠️  Não foi possível verificar atualização para %q: %v\n", source, err)
+			resolvedDesired.Skills[source] = gitRef
+		} else {
+			resolvedDesired.Skills[source] = hash
+		}
+	}
+
+	// Compute diff using resolved hashes
+	toInstall, toRemove, toUpgrade := diffManifests(resolvedDesired, locked)
 
 	total := len(toInstall) + len(toRemove) + len(toUpgrade)
 	if total == 0 {
@@ -133,8 +164,8 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 	}
 
-	// 4. Save lock file with current desired state
-	if err := desired.SaveLock(); err != nil {
+	// 4. Update sklfile.lock with the hashes we already resolved
+	if err := resolvedDesired.SaveLock(); err != nil {
 		return fmt.Errorf("erro ao salvar %s: %w", manifest.LockFileName, err)
 	}
 

@@ -282,6 +282,40 @@ func copyDir(src, dst string) error {
 	return nil
 }
 
+// ResolveRef uses "git ls-remote" to find the exact commit hash for a given ref (branch, tag or *).
+func ResolveRef(cloneURL, gitRef string) (string, error) {
+	args := []string{"ls-remote", cloneURL}
+
+	target := gitRef
+	if target == "" || target == "*" {
+		target = "HEAD"
+	}
+
+	args = append(args, target)
+
+	cmd := exec.Command("git", args...)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("erro ao resolver referência remota: %v (detalhe: %s)", err, strings.TrimSpace(stderr.String()))
+	}
+
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) == 0 || lines[0] == "" {
+		return "", fmt.Errorf("referência %q não encontrada no repositório remoto", target)
+	}
+
+	// Format is <hash>\t<ref>
+	parts := strings.Split(lines[0], "\t")
+	if len(parts) < 1 {
+		return "", fmt.Errorf("formato de resposta do git inválido ao resolver ref")
+	}
+
+	return parts[0], nil
+}
+
 // copyFile copies a single file from src to dst.
 func copyFile(src, dst string) error {
 	srcFile, err := os.Open(src)

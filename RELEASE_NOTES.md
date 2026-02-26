@@ -4,6 +4,21 @@ Este arquivo documenta o histórico de versões do **skl**.
 
 ---
 
+## [[v0.5.0]](https://github.com/rduarte/skl/releases/tag/v0.5.0) — 2026-02-26
+### 🚀 Novas Funcionalidades
+- **Detecção Inteligente de Atualizações (Smart Update)**: O `skl` agora rastreia o hash exato do commit no `sklfile.lock`.
+- O comando `update` agora detecta mudanças no repositório remoto mesmo usando referências simbólicas como `*` ou nomes de branch.
+- Resolução dinâmica de hashes via `git ls-remote` (sem necessidade de download prévio).
+
+---
+
+## [[v0.4.11]](https://github.com/rduarte/skl/releases/tag/v0.4.11) — 2026-02-26
+### 📝 Documentação
+- Migração das notas de lançamento para o arquivo local `RELEASE_NOTES.md`.
+- Adição de links diretos para as tags do GitHub no histórico.
+
+---
+
 ## [[v0.4.10]](https://github.com/rduarte/skl/releases/tag/v0.4.10) — 2026-02-26
 ### 🐛 Correções de Bugs
 - Corrigida sintaxe no esquema de configuração de releases do GitHub (removido em favor deste arquivo).

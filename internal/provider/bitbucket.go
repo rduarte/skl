@@ -14,3 +14,10 @@ func (Bitbucket) CloneURL(user, repo string) string {
 func (Bitbucket) RepoURL(user, repo string) string {
 	return fmt.Sprintf("https://bitbucket.org/%s/%s", user, repo)
 }
+
+func (Bitbucket) RawURL(user, repo, ref, path string) string {
+	if ref == "" {
+		ref = "main"
+	}
+	return fmt.Sprintf("https://bitbucket.org/%s/%s/raw/%s/%s", user, repo, ref, path)
+}

@@ -14,3 +14,10 @@ func (GitHub) CloneURL(user, repo string) string {
 func (GitHub) RepoURL(user, repo string) string {
 	return fmt.Sprintf("https://github.com/%s/%s", user, repo)
 }
+
+func (GitHub) RawURL(user, repo, ref, path string) string {
+	if ref == "" {
+		ref = "main"
+	}
+	return fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s/%s", user, repo, ref, path)
+}

@@ -280,6 +280,33 @@ skl --version
 
 ---
 
+## Catálogos e Autocompletar
+
+O `skl` suporta a descoberta automática de skills através de arquivos `catalog.json` na raiz dos repositórios.
+
+### Como funciona
+Ao digitar o início de um comando de instalação e pressionar `TAB`, o `skl` consulta o repositório via HTTP para listar as skills disponíveis:
+
+```bash
+$ skl install github@user/repo/[TAB]
+ai-expert    data-cleaner    refactor-pro
+```
+
+### Ativando o Autocompletar
+Para habilitar as sugestões no seu terminal, adicione o script de completion ao seu perfil (`.bashrc` ou `.zshrc`):
+
+**Bash:**
+```bash
+echo 'source <(skl completion bash)' >> ~/.bashrc
+```
+
+**Zsh:**
+```bash
+echo 'source <(skl completion zsh)' >> ~/.zshrc
+```
+
+---
+
 ## Licença
 
 [CC0 1.0 Universal](LICENSE)

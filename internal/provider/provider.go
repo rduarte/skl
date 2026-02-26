@@ -12,6 +12,10 @@ type Provider interface {
 
 	// RepoURL returns the browsable HTTPS URL for the given user/repo.
 	RepoURL(user, repo string) string
+
+	// RawURL returns the URL to download a raw file via HTTP.
+	// ref is the git branch or tag (e.g. "main", "v1.0.0").
+	RawURL(user, repo, ref, path string) string
 }
 
 // registry holds all known providers.

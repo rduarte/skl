@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/rduarte/skl/internal/catalog"
 	"github.com/rduarte/skl/internal/installer"
 	"github.com/rduarte/skl/internal/manifest"
 	"github.com/rduarte/skl/internal/parser"
@@ -20,6 +22,46 @@ Exemplos:
   skl install bitbucket@servicos-1doc/1doc-apis/1doc-api-expert`,
 	Args: cobra.ExactArgs(1),
 	RunE: runInstall,
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Only autocomplete if we have at least provider@user/repo/
+		if !strings.Contains(toComplete, "@") || !strings.Contains(toComplete, "/") {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		parts := strings.Split(toComplete, "/")
+		// We need at least provider@user/repo/ (which means parts length >= 2 and the last part might be the skill prefix)
+		if len(parts) < 2 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Extract ref parts from the first segments
+		refStr := strings.Join(parts[:len(parts)-1], "/") + "/"
+		ref, err := parser.Parse(refStr + "dummy") // add dummy skill to satisfy parser
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		prov, err := provider.New(ref.Provider)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		cat, err := catalog.Fetch(prov, ref.User, ref.Repo, ref.Tag)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		var suggestions []string
+		for _, entry := range cat.Skills {
+			suggestions = append(suggestions, refStr+entry.ID)
+		}
+
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
+	},
 }
 
 func init() {

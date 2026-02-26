@@ -4,6 +4,14 @@ Este arquivo documenta o histórico de versões do **skl**.
 
 ---
 
+## [[v0.5.4]](https://github.com/rduarte/skl/releases/tag/v0.5.4) — 2026-02-26
+### 🚀 Novas Funcionalidades
+- **Descoberta Automática de Skills no `list`**: Agora o comando `skl list` consegue listar conteúdos mesmo em repositórios que não possuem o arquivo `catalog.json`.
+- O `skl` realiza uma varredura automática em `.agent/skills/` e `skills/` para identificar capacidades disponíveis.
+- Skills descobertas automaticamente exibem `-` nas colunas de categoria e descrição.
+
+---
+
 ## [[v0.5.3]](https://github.com/rduarte/skl/releases/tag/v0.5.3) — 2026-02-26
 ### 🚀 Novas Funcionalidades
 - **Automação do `.gitignore`**: O `skl` agora garante automaticamente que o arquivo `sklfile.lock` esteja no seu `.gitignore` ao executar comandos como `install`, `update` ou `setup`.

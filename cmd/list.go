@@ -6,6 +6,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/rduarte/skl/internal/catalog"
+	"github.com/rduarte/skl/internal/installer"
 	"github.com/rduarte/skl/internal/parser"
 	"github.com/rduarte/skl/internal/provider"
 	"github.com/spf13/cobra"
@@ -42,10 +43,18 @@ func runList(cmd *cobra.Command, args []string) error {
 	fmt.Printf("🔍 Buscando catálogo em %s/%s...\n", ref.User, ref.Repo)
 	cat, err := catalog.Fetch(prov, ref.User, ref.Repo, ref.Tag)
 	if err != nil {
-		repoURL := prov.RepoURL(ref.User, ref.Repo)
-		fmt.Printf("\n⚠  Este repositório não possui um catálogo organizado (catalog.json).\n")
-		fmt.Printf("Sugerimos explorar o conteúdo manualmente através da URL:\n%s\n", repoURL)
-		return nil
+		// Fallback: Try to discover skills by listing directories
+		cloneURL := prov.CloneURL(ref.User, ref.Repo)
+		discovered, dErr := installer.DiscoverRemoteSkills(cloneURL, ref.Tag)
+		if dErr != nil || len(discovered) == 0 {
+			repoURL := prov.RepoURL(ref.User, ref.Repo)
+			fmt.Printf("\n⚠  Este repositório não possui um catálogo (catalog.json) nem pastas de skills detectáveis.\n")
+			fmt.Printf("Sugerimos explorar o conteúdo manualmente: %s\n", repoURL)
+			return nil
+		}
+
+		fmt.Printf("💡 Catálogo não encontrado. Descobertas %d skills via estrutura de diretórios.\n", len(discovered))
+		cat = catalog.FromDiscovery(discovered)
 	}
 
 	if len(cat.Skills) == 0 {

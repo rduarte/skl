@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -327,6 +328,63 @@ func ResolveRef(cloneURL, gitRef string) (string, error) {
 	}
 
 	return parts[0], nil
+}
+
+// DiscoverRemoteSkills lists directories inside .agent/skills/ and skills/ in a remote repo.
+func DiscoverRemoteSkills(cloneURL, tag string) ([]string, error) {
+	tmpDir, err := os.MkdirTemp("", "skl-discover-*")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cloneArgs := []string{
+		"clone",
+		"--filter=blob:none",
+		"--sparse",
+		"--depth=1",
+		"--no-checkout",
+	}
+	if tag != "" {
+		cloneArgs = append(cloneArgs, "--branch", tag)
+	}
+	cloneArgs = append(cloneArgs, cloneURL, tmpDir)
+
+	if _, err := runGitCapture(cloneArgs...); err != nil {
+		return nil, err
+	}
+
+	pathsToTry := []string{".agent/skills/", "skills/"}
+	var discovered []string
+	seen := make(map[string]bool)
+
+	for _, p := range pathsToTry {
+		cmd := exec.Command("git", "-C", tmpDir, "ls-tree", "-d", "--name-only", "HEAD", p)
+		out, err := cmd.Output()
+		if err != nil {
+			continue // Path might not exist, skip
+		}
+
+		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+		for _, line := range lines {
+			if line == "" {
+				continue
+			}
+			// ls-tree --name-only with a trailing slash in path returns names relative to that path
+			// e.g. .agent/skills/skill1 -> skill1
+			name := filepath.Base(line)
+			if !seen[name] {
+				discovered = append(discovered, name)
+				seen[name] = true
+			}
+		}
+	}
+
+	sort.Slice(discovered, func(i, j int) bool {
+		return discovered[i] < discovered[j]
+	})
+
+	return discovered, nil
 }
 
 // copyFile copies a single file from src to dst.

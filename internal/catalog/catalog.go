@@ -50,6 +50,19 @@ func Fetch(prov provider.Provider, user, repo, ref string) (*Catalog, error) {
 	return &cat, nil
 }
 
+// FromDiscovery creates a Catalog from a list of discovered skill IDs.
+func FromDiscovery(ids []string) *Catalog {
+	var skills []SkillEntry
+	for _, id := range ids {
+		skills = append(skills, SkillEntry{
+			ID:          id,
+			Description: "-",
+			Category:    "-",
+		})
+	}
+	return &Catalog{Skills: skills}
+}
+
 // Find finds a skill by its ID in the catalog.
 func (c *Catalog) Find(id string) *SkillEntry {
 	for _, s := range c.Skills {

@@ -33,6 +33,13 @@ func init() {
 }
 
 func runUpdate(cmd *cobra.Command, args []string) error {
+	// 0. Check if manifest exists
+	if _, err := os.Stat(manifest.FileName); os.IsNotExist(err) {
+		fmt.Printf("⚠  Arquivo %s não encontrado neste diretório.\n", manifest.FileName)
+		fmt.Println("   O comando 'update' requer um manifesto para sincronizar as skills.")
+		return nil // Abort gracefully or return error? User said "informando que o arquivo não existe e que o comando foi abortado".
+	}
+
 	// Load desired state (sklfile.json)
 	desired, err := manifest.Load()
 	if err != nil {

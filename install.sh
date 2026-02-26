@@ -52,9 +52,7 @@ mv "${TMP_FILE}" "${INSTALL_DIR}/${BINARY_NAME}"
 chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 
 # Setup completions
-if "${INSTALL_DIR}/${BINARY_NAME}" setup; then
-    ok "Configurações de autocompletar concluídas."
-fi
+"${INSTALL_DIR}/${BINARY_NAME}" setup || true
 
 ok "skl ${LATEST} instalado em ${INSTALL_DIR}/${BINARY_NAME}"
 

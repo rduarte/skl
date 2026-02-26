@@ -292,19 +292,6 @@ $ skl install github@user/repo/[TAB]
 ai-expert    data-cleaner    refactor-pro
 ```
 
-### Ativando o Autocompletar
-Para habilitar as sugestões no seu terminal, adicione o script de completion ao seu perfil (`.bashrc` ou `.zshrc`):
-
-**Bash:**
-```bash
-echo 'source <(skl completion bash)' >> ~/.bashrc
-```
-
-**Zsh:**
-```bash
-echo 'source <(skl completion zsh)' >> ~/.zshrc
-```
-
 ---
 
 ## Licença

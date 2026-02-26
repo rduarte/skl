@@ -51,6 +51,11 @@ mkdir -p "${INSTALL_DIR}"
 mv "${TMP_FILE}" "${INSTALL_DIR}/${BINARY_NAME}"
 chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 
+# Setup completions
+if "${INSTALL_DIR}/${BINARY_NAME}" setup; then
+    ok "Configurações de autocompletar concluídas."
+fi
+
 ok "skl ${LATEST} instalado em ${INSTALL_DIR}/${BINARY_NAME}"
 
 # Check if in PATH

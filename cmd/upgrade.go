@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/rduarte/skl/internal/installer"
 	"github.com/spf13/cobra"
 )
 
@@ -124,6 +125,9 @@ func runUpgrade(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("erro ao substituir binário: %w\n  Tente manualmente: sudo mv %s %s", err, tmpPath, execPath)
 		}
 	}
+
+	// 6. Update completions
+	installer.ConfigureCompletion(execPath)
 
 	fmt.Printf("✅ skl atualizado para %s\n", release.TagName)
 	return nil

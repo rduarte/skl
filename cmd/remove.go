@@ -18,6 +18,26 @@ var removeCmd = &cobra.Command{
 Exemplo:
   skl remove 1doc-api-expert`,
 	Args: cobra.ExactArgs(1),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		lock, err := manifest.LoadLock()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		var suggestions []string
+		for source := range lock.Skills {
+			name := manifest.SkillName(source)
+			if strings.HasPrefix(name, toComplete) {
+				suggestions = append(suggestions, name)
+			}
+		}
+
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: runRemove,
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/rduarte/skl/internal/catalog"
 	"github.com/rduarte/skl/internal/installer"
+	"github.com/rduarte/skl/internal/manifest"
 	"github.com/rduarte/skl/internal/parser"
 	"github.com/rduarte/skl/internal/provider"
 	"github.com/spf13/cobra"
@@ -26,6 +27,26 @@ Uso com referência remota (sem instalar):
   skl info bitbucket@servicos-1doc/1doc-apis/1doc-api-expert
   skl info github@empresa/repo-skills/data-analyzer:v1.2.0`,
 	Args: cobra.ExactArgs(1),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		lock, err := manifest.LoadLock()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		var suggestions []string
+		for source := range lock.Skills {
+			name := manifest.SkillName(source)
+			if strings.HasPrefix(name, toComplete) {
+				suggestions = append(suggestions, name)
+			}
+		}
+
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: runInfo,
 }
 

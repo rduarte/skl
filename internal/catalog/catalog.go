@@ -21,6 +21,7 @@ type SkillEntry struct {
 	Description string   `json:"description"`
 	Category    string   `json:"category"`
 	Tags        []string `json:"tags"`
+	Path        string   `json:"path"`
 }
 
 // Fetch fetch the catalog.json from the given repository using the provider's RawURL.
@@ -47,4 +48,14 @@ func Fetch(prov provider.Provider, user, repo, ref string) (*Catalog, error) {
 	}
 
 	return &cat, nil
+}
+
+// Find finds a skill by its ID in the catalog.
+func (c *Catalog) Find(id string) *SkillEntry {
+	for _, s := range c.Skills {
+		if s.ID == id {
+			return &s
+		}
+	}
+	return nil
 }

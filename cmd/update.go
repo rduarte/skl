@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rduarte/skl/internal/catalog"
 	"github.com/rduarte/skl/internal/installer"
 	"github.com/rduarte/skl/internal/manifest"
 	"github.com/rduarte/skl/internal/parser"
@@ -183,8 +184,17 @@ func installSkill(source, gitRef string) error {
 	cloneURL := prov.CloneURL(ref.User, ref.Repo)
 	repoURL := prov.RepoURL(ref.User, ref.Repo)
 
+	// Resolve skill path (via catalog.json if available)
+	var overridePath string
+	cat, err := catalog.Fetch(prov, ref.User, ref.Repo, ref.Tag)
+	if err == nil && cat != nil {
+		if entry := cat.Find(ref.Skill); entry != nil && entry.Path != "" {
+			overridePath = entry.Path
+		}
+	}
+
 	fmt.Printf("🔗 Clone URL: %s\n", cloneURL)
-	return installer.Install(cloneURL, repoURL, ref.Skill, ref.Tag, true)
+	return installer.Install(cloneURL, repoURL, ref.Skill, ref.Tag, overridePath, true)
 }
 
 // removeSkillDir removes the skill directory from .agent/skills/.

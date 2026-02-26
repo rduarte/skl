@@ -20,7 +20,7 @@ func repoSkillPath(skill string) string {
 // Install clones the given repo using sparse-checkout and copies only the
 // skill subdirectory into .agent/skills/<skill> relative to the current
 // working directory. If force is true, an existing skill is removed first.
-func Install(cloneURL, repoURL, skill, tag string, force bool) error {
+func Install(cloneURL, repoURL, skill, tag, overridePath string, force bool) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("erro ao obter diretório atual: %w", err)
@@ -48,8 +48,14 @@ func Install(cloneURL, repoURL, skill, tag string, force bool) error {
 
 	fmt.Printf("⬇  Baixando skill %q...\n", skill)
 
-	// The skill lives at .agent/skills/<skill> inside the repo
-	skillRepoPath := repoSkillPath(skill)
+	// The skill lives at .agent/skills/<skill> inside the repo by default,
+	// or at overridePath if provided.
+	skillRepoPath := overridePath
+	if skillRepoPath == "" {
+		skillRepoPath = repoSkillPath(skill)
+	} else if strings.HasSuffix(skillRepoPath, "/SKILL.md") || skillRepoPath == "SKILL.md" {
+		skillRepoPath = filepath.Dir(skillRepoPath)
+	}
 
 	// Step 1: Clone with sparse-checkout (blob filter for speed, no file checkout yet)
 	cloneArgs := []string{
@@ -97,8 +103,13 @@ func Install(cloneURL, repoURL, skill, tag string, force bool) error {
 
 // FetchFile fetches a single file from a skill directory in a remote repo.
 // It clones sparsely, reads the file, and cleans up the temp dir.
-func FetchFile(cloneURL, repoURL, skill, tag, filename string) ([]byte, error) {
-	skillRepoPath := repoSkillPath(skill)
+func FetchFile(cloneURL, repoURL, skill, tag, overridePath, filename string) ([]byte, error) {
+	skillRepoPath := overridePath
+	if skillRepoPath == "" {
+		skillRepoPath = repoSkillPath(skill)
+	} else if strings.HasSuffix(skillRepoPath, "/SKILL.md") || skillRepoPath == "SKILL.md" {
+		skillRepoPath = filepath.Dir(skillRepoPath)
+	}
 
 	tmpDir, err := os.MkdirTemp("", "skl-fetch-*")
 	if err != nil {

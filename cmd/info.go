@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/glamour"
+	"github.com/rduarte/skl/internal/catalog"
 	"github.com/rduarte/skl/internal/installer"
 	"github.com/rduarte/skl/internal/parser"
 	"github.com/rduarte/skl/internal/provider"
@@ -91,7 +92,16 @@ func fetchRemoteSkillMD(rawRef string) ([]byte, error) {
 	fmt.Printf("🔗 Clone URL: %s\n", cloneURL)
 	fmt.Printf("⬇  Buscando SKILL.md de %q...\n\n", ref.Skill)
 
-	data, err := installer.FetchFile(cloneURL, repoURL, ref.Skill, ref.Tag, "SKILL.md")
+	// Resolve skill path (via catalog.json if available)
+	var overridePath string
+	cat, err := catalog.Fetch(prov, ref.User, ref.Repo, ref.Tag)
+	if err == nil && cat != nil {
+		if entry := cat.Find(ref.Skill); entry != nil && entry.Path != "" {
+			overridePath = entry.Path
+		}
+	}
+
+	data, err := installer.FetchFile(cloneURL, repoURL, ref.Skill, ref.Tag, overridePath, "SKILL.md")
 	if err != nil {
 		return nil, err
 	}

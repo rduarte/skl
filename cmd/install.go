@@ -64,8 +64,11 @@ Exemplos:
 	},
 }
 
+var forceInstall bool
+
 func init() {
 	rootCmd.AddCommand(installCmd)
+	installCmd.Flags().BoolVarP(&forceInstall, "force", "f", false, "Sobrescreve a skill se ela já estiver instalada")
 }
 
 func runInstall(cmd *cobra.Command, args []string) error {
@@ -87,8 +90,18 @@ func runInstall(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("🔗 Clone URL: %s\n", cloneURL)
 
-	// 4. Install the skill (force=false: don't overwrite existing)
-	if err := installer.Install(cloneURL, repoURL, ref.Skill, ref.Tag, false); err != nil {
+	// 4. Resolve skill path (via catalog.json if available)
+	var overridePath string
+	cat, err := catalog.Fetch(prov, ref.User, ref.Repo, ref.Tag)
+	if err == nil && cat != nil {
+		if entry := cat.Find(ref.Skill); entry != nil && entry.Path != "" {
+			overridePath = entry.Path
+			fmt.Printf("📖 Skill localizada via catálogo: %s\n", overridePath)
+		}
+	}
+
+	// 5. Install the skill (force=false: don't overwrite existing)
+	if err := installer.Install(cloneURL, repoURL, ref.Skill, ref.Tag, overridePath, forceInstall); err != nil {
 		return err
 	}
 

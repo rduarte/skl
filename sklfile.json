@@ -1,3 +1,5 @@
 {
-  "skills": {}
+  "skills": {
+    "github@rmyndharis/antigravity-skills/tutorial-engineer": "*"
+  }
 }

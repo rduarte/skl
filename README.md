@@ -99,7 +99,8 @@ Registra o que está **realmente instalado** (versões exatas, tags, etc). Garan
 | `list` | Lista skills disponíveis em um repositório remoto. |
 | `info` | Exibe a documentação (`SKILL.md`) da skill. |
 | `upgrade` | Atualiza o próprio `skl` para a última versão. |
-| `setup` | (Automático) Reconfigura as sugestões de shell. |
+| `rebuild` | (Automático) Reconstrói as sugestões de shell. |
+| `setup` | Indexa folders locais como skills gerenciadas. |
 
 ---
 

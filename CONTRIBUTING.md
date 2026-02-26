@@ -13,6 +13,8 @@ skl/
 ├── cmd/                # Comandos CLI (Cobra)
 │   ├── root.go         # Configuração base + Version Check
 │   ├── install.go      # Resolução via Catalog + Installer
+│   ├── rebuild.go      # (Antigo setup) Reconstrói completions
+│   ├── setup.go        # (Novo) Indexa skills locais
 │   └── ...             # Demais comandos (update, remove, list, info)
 ├── internal/
 │   ├── parser/         # Lógica de parsing de referências e repositórios

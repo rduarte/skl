@@ -36,10 +36,22 @@ var repoPattern = regexp.MustCompile(
 // Parse takes a raw skill reference string and returns a SkillRef.
 func Parse(raw string) (*SkillRef, error) {
 	raw = strings.TrimSuffix(raw, "/")
+
+	// Special case: local@skill-name
+	if strings.HasPrefix(raw, "local@") {
+		parts := strings.Split(raw, "@")
+		if len(parts) == 2 && parts[1] != "" {
+			return &SkillRef{
+				Provider: "local",
+				Skill:    parts[1],
+			}, nil
+		}
+	}
+
 	matches := pattern.FindStringSubmatch(raw)
 	if matches == nil {
 		return nil, fmt.Errorf(
-			"formato inválido: %q\nFormato esperado: <provider>@<user>/<repo>/<skill>[:tag]\nExemplo: github@empresa/repo-skills/data-analyzer:v1.2.0",
+			"formato inválido: %q\nFormato esperado: <provider>@<user>/<repo>/<skill>[:tag] ou local@<skill>\nExemplo: github@empresa/repo-skills/data-analyzer:v1.2.0 ou local@my-skill",
 			raw,
 		)
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rduarte/skl/internal/catalog"
 	"github.com/rduarte/skl/internal/installer"
@@ -79,6 +80,15 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	// 1. Remove skills that were removed from sklfile.json
 	for _, source := range toRemove {
 		skill := manifest.SkillName(source)
+
+		// If it's a local skill, we just stop tracking it in the lock file (happens later)
+		// but we do NOT delete the directory.
+		if strings.HasPrefix(source, "local@") {
+			fmt.Printf("➖ Deixando de rastrear skill local %q (arquivos mantidos)\n", skill)
+			success++
+			continue
+		}
+
 		fmt.Printf("🗑️  Removendo %q...\n", skill)
 		if err := removeSkillDir(skill); err != nil {
 			errors = append(errors, fmt.Sprintf("  ✗ %s: %v", skill, err))
@@ -181,6 +191,11 @@ func installSkill(source, gitRef string) error {
 	ref, err := parser.Parse(fullRef)
 	if err != nil {
 		return err
+	}
+
+	// Local skills are already on disk, nothing to install
+	if ref.Provider == "local" {
+		return nil
 	}
 
 	prov, err := provider.New(ref.Provider)

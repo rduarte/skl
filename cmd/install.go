@@ -27,22 +27,40 @@ Exemplos:
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		// Only autocomplete if we have at least provider@user/repo/
-		if !strings.Contains(toComplete, "@") || !strings.Contains(toComplete, "/") {
+		// Only autocomplete if we have at least provider@user/repo
+		if !strings.Contains(toComplete, "@") {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
 		parts := strings.Split(toComplete, "/")
-		// We need at least provider@user/repo/ (which means parts length >= 2 and the last part might be the skill prefix)
-		if len(parts) < 2 {
-			return nil, cobra.ShellCompDirectiveNoFileComp
+
+		var ref *parser.SkillRef
+		var refStr string
+
+		if len(parts) >= 3 {
+			// case: provider@user/repo/skill-prefix
+			refStr = strings.Join(parts[:len(parts)-1], "/") + "/"
+			r, err := parser.Parse(refStr + "dummy")
+			if err == nil {
+				ref = r
+			}
+		} else if len(parts) == 2 {
+			// case: provider@user/repo (missing trailing slash)
+			// we try to parse it as a repo to get user/repo
+			r, err := parser.ParseRepo(toComplete)
+			if err == nil {
+				refStr = toComplete + "/"
+				ref = &parser.SkillRef{
+					Provider: r.Provider,
+					User:     r.User,
+					Repo:     r.Repo,
+					Tag:      r.Tag,
+				}
+			}
 		}
 
-		// Extract ref parts from the first segments
-		refStr := strings.Join(parts[:len(parts)-1], "/") + "/"
-		ref, err := parser.Parse(refStr + "dummy") // add dummy skill to satisfy parser
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
+		if ref == nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
 		prov, err := provider.New(ref.Provider)

@@ -62,13 +62,14 @@ Se você deseja adicionar suporte a uma nova plataforma (ex: GitLab), siga estes
 
 As releases são automatizadas via GitHub Actions.
 
-1. **Tagging**: Crie uma tag seguindo o versionamento semântico:
+1. **Quando Lançar?**: Lance uma nova versão apenas para alterações que impactem o **uso ou comportamento** da ferramenta CLI (novos comandos, correções de bugs, features).
+   - **Exemplo**: Se você apenas atualizou documentos (`README`, `CONTRIBUTING`), envie o commit para o `main`, mas **não crie uma nova tag**.
+2. **Tagging**: Crie uma tag seguindo o versionamento semântico:
    ```bash
    git tag v0.4.5
    git push origin v0.4.5
    ```
-2. **Automação**: O workflow `.github/workflows/release.yml` irá compilar o binário, injetar a versão via `ldflags` e criar a release no GitHub.
-3. **Pós-Release**: O comando `skl upgrade` dos usuários passará a detectar a nova versão em poucos segundos.
+3. **Automação**: O workflow de CI irá compilar o binário e criar a release no GitHub. O comando `skl upgrade` dos usuários detectará a nova versão automaticamente.
 
 ---
 

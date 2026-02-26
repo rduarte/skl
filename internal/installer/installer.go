@@ -12,11 +12,6 @@ import (
 
 const skillsDir = ".agent/skills"
 
-// repoSkillPath returns the path of a skill inside the repository.
-func repoSkillPath(skill string) string {
-	return filepath.Join(skillsDir, skill)
-}
-
 // Install clones the given repo using sparse-checkout and copies only the
 // skill subdirectory into .agent/skills/<skill> relative to the current
 // working directory. If force is true, an existing skill is removed first.
@@ -48,15 +43,6 @@ func Install(cloneURL, repoURL, skill, tag, overridePath string, force bool) err
 
 	fmt.Printf("⬇  Baixando skill %q...\n", skill)
 
-	// The skill lives at .agent/skills/<skill> inside the repo by default,
-	// or at overridePath if provided.
-	skillRepoPath := overridePath
-	if skillRepoPath == "" {
-		skillRepoPath = repoSkillPath(skill)
-	} else if strings.HasSuffix(skillRepoPath, "/SKILL.md") || skillRepoPath == "SKILL.md" {
-		skillRepoPath = filepath.Dir(skillRepoPath)
-	}
-
 	// Step 1: Clone with sparse-checkout (blob filter for speed, no file checkout yet)
 	cloneArgs := []string{
 		"clone",
@@ -74,9 +60,25 @@ func Install(cloneURL, repoURL, skill, tag, overridePath string, force bool) err
 		return classifyCloneError(stderr, repoURL, tag)
 	}
 
-	// Step 2: Verify that the skill directory exists in the repo tree BEFORE checkout
-	if err := verifyPathExists(tmpDir, skillRepoPath, repoURL); err != nil {
-		return err
+	// Step 2: Resolve the skill directory inside the repo
+	skillRepoPath := overridePath
+	if skillRepoPath == "" {
+		// Try .agent/skills/<skill> first
+		primaryPath := filepath.Join(".agent/skills", skill)
+		if err := verifyPathExists(tmpDir, primaryPath, repoURL); err == nil {
+			skillRepoPath = primaryPath
+		} else {
+			// Try skills/<skill> as fallback
+			fallbackPath := filepath.Join("skills", skill)
+			if err := verifyPathExists(tmpDir, fallbackPath, repoURL); err == nil {
+				skillRepoPath = fallbackPath
+			} else {
+				// If both fail, return the primary error for clarity
+				return err
+			}
+		}
+	} else if strings.HasSuffix(skillRepoPath, "/SKILL.md") || skillRepoPath == "SKILL.md" {
+		skillRepoPath = filepath.Dir(skillRepoPath)
 	}
 
 	// Step 3: Sparse-checkout only the skill directory and checkout
@@ -97,19 +99,14 @@ func Install(cloneURL, repoURL, skill, tag, overridePath string, force bool) err
 		return fmt.Errorf("erro ao copiar skill: %w", err)
 	}
 
-	fmt.Printf("✅ Skill %q instalada em %s\n", skill, destDir)
+	fmt.Printf("✅ Skill %q instalada em %s (via %s)\n", skill, destDir, skillRepoPath)
 	return nil
 }
 
 // FetchFile fetches a single file from a skill directory in a remote repo.
 // It clones sparsely, reads the file, and cleans up the temp dir.
 func FetchFile(cloneURL, repoURL, skill, tag, overridePath, filename string) ([]byte, error) {
-	skillRepoPath := overridePath
-	if skillRepoPath == "" {
-		skillRepoPath = repoSkillPath(skill)
-	} else if strings.HasSuffix(skillRepoPath, "/SKILL.md") || skillRepoPath == "SKILL.md" {
-		skillRepoPath = filepath.Dir(skillRepoPath)
-	}
+	var skillRepoPath string
 
 	tmpDir, err := os.MkdirTemp("", "skl-fetch-*")
 	if err != nil {
@@ -134,9 +131,25 @@ func FetchFile(cloneURL, repoURL, skill, tag, overridePath, filename string) ([]
 		return nil, classifyCloneError(stderr, repoURL, tag)
 	}
 
-	// Verify skill exists
-	if err := verifyPathExists(tmpDir, skillRepoPath, repoURL); err != nil {
-		return nil, err
+	// Resolve the skill directory inside the repo
+	skillRepoPath = overridePath
+	if skillRepoPath == "" {
+		// Try .agent/skills/<skill> first
+		primaryPath := filepath.Join(".agent/skills", skill)
+		if err := verifyPathExists(tmpDir, primaryPath, repoURL); err == nil {
+			skillRepoPath = primaryPath
+		} else {
+			// Try skills/<skill> as fallback
+			fallbackPath := filepath.Join("skills", skill)
+			if err := verifyPathExists(tmpDir, fallbackPath, repoURL); err == nil {
+				skillRepoPath = fallbackPath
+			} else {
+				// If both fail, return the primary error for clarity
+				return nil, err
+			}
+		}
+	} else if strings.HasSuffix(skillRepoPath, "/SKILL.md") || skillRepoPath == "SKILL.md" {
+		skillRepoPath = filepath.Dir(skillRepoPath)
 	}
 
 	// Sparse-checkout and checkout

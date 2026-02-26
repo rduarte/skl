@@ -4,6 +4,13 @@ Este arquivo documenta o histórico de versões do **skl**.
 
 ---
 
+## [[v0.5.2]](https://github.com/rduarte/skl/releases/tag/v0.5.2) — 2026-02-26
+### 🚀 Novas Funcionalidades
+- **Suporte a Múltiplos Caminhos de Skill**: O `skl` agora detecta automaticamente skills localizadas tanto em `.agent/skills/` quanto na pasta `skills/` (na raiz do repositório remoto).
+- Facilita a integração com repositórios que seguem diferentes convenções de organização.
+
+---
+
 ## [[v0.5.1]](https://github.com/rduarte/skl/releases/tag/v0.5.1) — 2026-02-26
 ### 📝 Documentação
 - Adicionado link para o `RELEASE_NOTES.md` no final do `README.md` para facilitar o acesso ao histórico de mudanças.

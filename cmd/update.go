@@ -180,6 +180,9 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Ensure lock file is ignored in .gitignore
+	_ = manifest.EnsureIgnoreLock()
+
 	return nil
 }
 

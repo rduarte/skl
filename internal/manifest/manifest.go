@@ -161,3 +161,45 @@ func (m *Manifest) saveFile(name string) error {
 
 	return nil
 }
+
+// EnsureIgnoreLock checks if .gitignore exists and contains LockFileName.
+// If not, it adds it automatically.
+func EnsureIgnoreLock() error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	gitIgnorePath := filepath.Join(cwd, ".gitignore")
+	if _, err := os.Stat(gitIgnorePath); os.IsNotExist(err) {
+		return nil // No .gitignore, nothing to do
+	}
+
+	data, err := os.ReadFile(gitIgnorePath)
+	if err != nil {
+		return fmt.Errorf("erro ao ler .gitignore: %w", err)
+	}
+
+	content := string(data)
+	lines := strings.Split(content, "\n")
+	found := false
+	for _, line := range lines {
+		if strings.TrimSpace(line) == LockFileName {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Ensure it ends with newline if we're appending
+		if len(content) > 0 && !strings.HasSuffix(content, "\n") {
+			content += "\n"
+		}
+		content += LockFileName + "\n"
+		if err := os.WriteFile(gitIgnorePath, []byte(content), 0o644); err != nil {
+			return fmt.Errorf("erro ao atualizar .gitignore: %w", err)
+		}
+	}
+
+	return nil
+}

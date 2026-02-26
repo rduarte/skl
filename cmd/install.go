@@ -163,5 +163,9 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("🔒 Skill bloqueada com hash no %s\n", manifest.LockFileName)
+
+	// Ensure lock file is ignored in .gitignore
+	_ = manifest.EnsureIgnoreLock()
+
 	return nil
 }

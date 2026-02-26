@@ -4,6 +4,13 @@ Este arquivo documenta o histórico de versões do **skl**.
 
 ---
 
+## [[v0.5.3]](https://github.com/rduarte/skl/releases/tag/v0.5.3) — 2026-02-26
+### 🚀 Novas Funcionalidades
+- **Automação do `.gitignore`**: O `skl` agora garante automaticamente que o arquivo `sklfile.lock` esteja no seu `.gitignore` ao executar comandos como `install`, `update` ou `setup`.
+- Isso evita que arquivos de lock com hashes específicos do ambiente sejam commitados por acidente.
+
+---
+
 ## [[v0.5.2]](https://github.com/rduarte/skl/releases/tag/v0.5.2) — 2026-02-26
 ### 🚀 Novas Funcionalidades
 - **Suporte a Múltiplos Caminhos de Skill**: O `skl` agora detecta automaticamente skills localizadas tanto em `.agent/skills/` quanto na pasta `skills/` (na raiz do repositório remoto).

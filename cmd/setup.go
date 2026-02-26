@@ -71,5 +71,9 @@ func runSetup(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\n✨ %d nova(s) skill(s) adicionada(s) ao %s e %s\n", addedCount, manifest.FileName, manifest.LockFileName)
+
+	// Ensure lock file is ignored in .gitignore
+	_ = manifest.EnsureIgnoreLock()
+
 	return nil
 }

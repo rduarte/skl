@@ -36,6 +36,9 @@ func FetchLatestRelease(timeout time.Duration) (*Release, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusForbidden {
+			return nil, fmt.Errorf("limite de requisições do GitHub atingido. Tente novamente mais tarde ou verifique manualmente em https://github.com/%s/%s/releases", RepoOwner, RepoName)
+		}
 		return nil, fmt.Errorf("GitHub API status: %d", resp.StatusCode)
 	}
 

@@ -32,7 +32,8 @@ func runUpgrade(cmd *cobra.Command, args []string) error {
 	// 1. Fetch latest release from GitHub API
 	release, err := updater.FetchLatestRelease(10 * time.Second)
 	if err != nil {
-		return fmt.Errorf("erro ao consultar GitHub: %w", err)
+		fmt.Printf("❌ %v\n", err)
+		return nil // Return nil so Cobra doesn't print "Usage:"
 	}
 
 	// 2. Compare versions

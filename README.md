@@ -280,7 +280,7 @@ skl --version
 
 ---
 
-## Catálogos e Autocompletar
+## Catálogos
 
 O `skl` suporta a descoberta automática de skills através de arquivos `catalog.json` na raiz dos repositórios.
 

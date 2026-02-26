@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 // SkillRef holds all the parsed components of a skill reference.
@@ -14,18 +15,27 @@ type SkillRef struct {
 	Tag      string // e.g. "v1.2.0" (empty if not specified)
 }
 
+// RepoRef holds parsed components of a repository reference.
+type RepoRef struct {
+	Provider string
+	User     string
+	Repo     string
+	Tag      string
+}
+
 // pattern matches: <provider>@<user>/<repo>/<skill>[:tag]
-// provider: alphanumeric + hyphens
-// user:     alphanumeric + hyphens + dots
-// repo:     alphanumeric + hyphens + dots
-// skill:    alphanumeric + hyphens + dots + underscores
-// tag:      alphanumeric + hyphens + dots (optional, prefixed by ":")
 var pattern = regexp.MustCompile(
 	`^([a-zA-Z0-9-]+)@([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?::([a-zA-Z0-9._-]+))?$`,
 )
 
+// repoPattern matches: <provider>@<user>/<repo>[:tag]
+var repoPattern = regexp.MustCompile(
+	`^([a-zA-Z0-9-]+)@([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?::([a-zA-Z0-9._-]+))?$`,
+)
+
 // Parse takes a raw skill reference string and returns a SkillRef.
 func Parse(raw string) (*SkillRef, error) {
+	raw = strings.TrimSuffix(raw, "/")
 	matches := pattern.FindStringSubmatch(raw)
 	if matches == nil {
 		return nil, fmt.Errorf(
@@ -43,6 +53,25 @@ func Parse(raw string) (*SkillRef, error) {
 	}
 
 	return ref, nil
+}
+
+// ParseRepo takes a raw repository reference string and returns a RepoRef.
+func ParseRepo(raw string) (*RepoRef, error) {
+	raw = strings.TrimSuffix(raw, "/")
+	matches := repoPattern.FindStringSubmatch(raw)
+	if matches == nil {
+		return nil, fmt.Errorf(
+			"formato de repositório inválido: %q\nFormato esperado: <provider>@<user>/<repo>[:tag]\nExemplo: github@empresa/repo-skills",
+			raw,
+		)
+	}
+
+	return &RepoRef{
+		Provider: matches[1],
+		User:     matches[2],
+		Repo:     matches[3],
+		Tag:      matches[4],
+	}, nil
 }
 
 // String returns a human-readable representation of the SkillRef.

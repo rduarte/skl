@@ -16,8 +16,11 @@ type Catalog struct {
 
 // SkillEntry represents a single skill entry in the catalog.
 type SkillEntry struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Category    string   `json:"category"`
+	Tags        []string `json:"tags"`
 }
 
 // Fetch fetch the catalog.json from the given repository using the provider's RawURL.

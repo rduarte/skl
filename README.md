@@ -93,7 +93,7 @@ Para desenvolvedores que desejam evoluir a ferramenta ou adicionar novos provide
 
 ## 📅 Histórico de Versões
 
-Para acompanhar as últimas melhorias e correções, consulte nosso [RELEASE_NOTES.md](RELEASE_NOTES.md).
+Para acompanhar as últimas melhorias e correções, consulte nosso [RELEASES.md](RELEASES.md).
 
 ---
 

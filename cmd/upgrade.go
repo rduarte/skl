@@ -1,20 +1,16 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/rduarte/skl/internal/installer"
+	"github.com/rduarte/skl/internal/updater"
 	"github.com/spf13/cobra"
-)
-
-const (
-	repoOwner = "rduarte"
-	repoName  = "skl"
 )
 
 var upgradeCmd = &cobra.Command{
@@ -29,34 +25,14 @@ func init() {
 	rootCmd.AddCommand(upgradeCmd)
 }
 
-type githubRelease struct {
-	TagName string `json:"tag_name"`
-	Assets  []struct {
-		Name               string `json:"name"`
-		BrowserDownloadURL string `json:"browser_download_url"`
-	} `json:"assets"`
-}
-
 func runUpgrade(cmd *cobra.Command, args []string) error {
 	fmt.Printf("📦 Versão atual: %s\n", Version)
 	fmt.Println("🔍 Verificando última versão...")
 
 	// 1. Fetch latest release from GitHub API
-	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", repoOwner, repoName)
-	resp, err := http.Get(apiURL)
+	release, err := updater.FetchLatestRelease(10 * time.Second)
 	if err != nil {
-		return fmt.Errorf("erro ao consultar GitHub API: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("GitHub API retornou status %d. Verifique: https://github.com/%s/%s/releases",
-			resp.StatusCode, repoOwner, repoName)
-	}
-
-	var release githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return fmt.Errorf("erro ao interpretar resposta da API: %w", err)
+		return fmt.Errorf("erro ao consultar GitHub: %w", err)
 	}
 
 	// 2. Compare versions
@@ -79,7 +55,7 @@ func runUpgrade(cmd *cobra.Command, args []string) error {
 
 	if downloadURL == "" {
 		return fmt.Errorf("binário %q não encontrado na release %s.\n  Verifique: https://github.com/%s/%s/releases/tag/%s",
-			assetName, release.TagName, repoOwner, repoName, release.TagName)
+			assetName, release.TagName, updater.RepoOwner, updater.RepoName, release.TagName)
 	}
 
 	// 4. Download the new binary

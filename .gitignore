@@ -14,3 +14,4 @@ skl-linux-*
 # Skills instaladas (gerenciadas pelo sklfile.json, não versionadas)
 .agent/skills/*
 !.agent/skills/skl-contributor/
+sklfile.lock

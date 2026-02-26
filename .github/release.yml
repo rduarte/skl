@@ -18,7 +18,7 @@ changelog:
         - "refactor"
         - "maintenance"
   exclude:
-    - labels:
-        - "internal"
-    - authors:
-        - "antigravity-bot"
+    labels:
+      - "internal"
+    authors:
+      - "antigravity-bot"

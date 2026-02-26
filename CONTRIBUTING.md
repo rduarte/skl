@@ -1,220 +1,83 @@
-# Contribuindo com o skl
+# Guia de Contribuição ✨
 
-Obrigado pelo interesse em contribuir! Este guia explica como configurar o ambiente, desenvolver, e publicar novas versões do skl.
-
----
-
-## Pré-requisitos
-
-- **Go 1.24+** — [go.dev/dl](https://go.dev/dl/)
-- **Git** com chave SSH configurada
-- **Make** (geralmente já instalado no Linux)
+Este guia é destinado a desenvolvedores que desejam evoluir o **skl**, adicionar novos providers ou entender as entranhas da ferramenta.
 
 ---
 
-## Configuração do ambiente
+## 🏗️ Arquitetura do Projeto
 
-```bash
-# 1. Clone o repositório
-git clone git@github.com:rduarte/skl.git
-cd skl
-
-# 2. Instale as dependências
-go mod download
-
-# 3. Compile
-make build
-
-# 4. Verifique
-./skl --version
-```
-
----
-
-## Estrutura do projeto
+O projeto é escrito em Go e segue uma estrutura modular para facilitar a expansão:
 
 ```
 skl/
-├── main.go                          # Ponto de entrada
-├── cmd/
-│   ├── root.go                      # Comando raiz (Cobra)
-│   ├── install.go                   # skl install
-│   ├── update.go                    # skl update
-│   ├── info.go                      # skl info
-│   └── upgrade.go                   # skl upgrade (self-update)
+├── cmd/                # Comandos CLI (Cobra)
+│   ├── root.go         # Configuração base + Version Check
+│   ├── install.go      # Resolução via Catalog + Installer
+│   └── ...             # Demais comandos (update, remove, list, info)
 ├── internal/
-│   ├── parser/parser.go             # Parser de referências de skills
-│   ├── provider/
-│   │   ├── provider.go              # Interface + registry de providers
-│   │   ├── github.go                # Provider GitHub
-│   │   └── bitbucket.go             # Provider Bitbucket
-│   ├── installer/installer.go       # Lógica de clone + sparse-checkout
-│   └── manifest/manifest.go         # Leitura/gravação do sklfile.json
-├── install.sh                       # Script de instalação para usuários
-├── Makefile                         # Build, install, clean
-├── .github/workflows/release.yml    # CI/CD para releases automáticas
-└── go.mod / go.sum
+│   ├── parser/         # Lógica de parsing de referências e repositórios
+│   ├── provider/       # Abstração de Git Hosts (GitHub, Bitbucket)
+│   ├── catalog/        # Busca e parse de catalog.json via HTTP
+│   ├── installer/      # Clone, sparse-checkout e gestão de arquivos
+│   ├── manifest/       # Gestão do sklfile.json e sklfile.lock
+│   └── updater/        # Lógica de auto-update (GitHub Releases)
+├── install.sh          # Script de instalação para usuário final
+└── .github/workflows/  # CI/CD (Build e Release automática)
 ```
 
 ---
 
-## Fluxo de desenvolvimento
+## 🛠️ Configuração do Ambiente
 
-### 1. Crie uma branch
-
-```bash
-git checkout -b feat/minha-feature
-```
-
-### 2. Faça suas alterações
-
-- Novos comandos vão em `cmd/`
-- Lógica interna vai em `internal/`
-- Novos providers implementam a interface `Provider` em `internal/provider/`
-
-### 3. Compile e teste
-
-```bash
-# Build rápido
-make build
-./skl --help
-
-# Testar um comando
-./skl install github@user/repo/skill
-```
-
-### 4. Commit e push
-
-Use [Conventional Commits](https://www.conventionalcommits.org/):
-
-```bash
-git commit -m "feat: adicionar suporte a GitLab"
-git commit -m "fix: tratar erro de timeout no clone"
-git commit -m "docs: atualizar exemplos no README"
-```
-
-| Prefixo  | Quando usar                        |
-|----------|------------------------------------|
-| `feat:`  | Nova funcionalidade                |
-| `fix:`   | Correção de bug                    |
-| `docs:`  | Alteração em documentação          |
-| `refactor:` | Refatoração sem mudar comportamento |
-| `chore:` | Tarefas de manutenção              |
-
-### 5. Abra um Pull Request
-
-```bash
-git push origin feat/minha-feature
-```
+1. **Go 1.24+**: Certifique-se de ter o Go instalado.
+2. **Clone**: `git clone git@github.com:rduarte/skl.git`
+3. **Build para Teste**:
+   ```bash
+   go build -o skl .
+   ./skl list github@rmyndharis/antigravity-skills
+   ```
 
 ---
 
-## Adicionando um novo provider
+## 🚀 Como Criar um Novo Provider
 
-Para suportar uma nova plataforma Git (ex: GitLab):
+Se você deseja adicionar suporte a uma nova plataforma (ex: GitLab), siga estes passos:
 
-1. Crie `internal/provider/gitlab.go`:
-
-```go
-package provider
-
-import "fmt"
-
-type GitLab struct{}
-
-func (GitLab) Name() string { return "gitlab" }
-
-func (GitLab) CloneURL(user, repo string) string {
-    return fmt.Sprintf("git@gitlab.com:%s/%s.git", user, repo)
-}
-
-func (GitLab) RepoURL(user, repo string) string {
-    return fmt.Sprintf("https://gitlab.com/%s/%s", user, repo)
-}
-```
-
-2. Registre no `provider.go`:
-
-```go
-var registry = map[string]Provider{
-    "github":    GitHub{},
-    "bitbucket": Bitbucket{},
-    "gitlab":    GitLab{},   // ← adicionar aqui
-}
-```
-
-3. Compile e teste:
-
-```bash
-make build
-./skl install gitlab@grupo/repo/skill
-```
+1. **Implemente a interface `Provider`** em `internal/provider/`:
+   ```go
+   type Provider interface {
+       Name() string
+       CloneURL(user, repo string) string
+       RepoURL(user, repo string) string
+       RawURL(user, repo, ref, path string) string // Para busca de catalog.json
+   }
+   ```
+2. **Registre o provider** no mapa `registry` em `internal/provider/provider.go`.
 
 ---
 
-## Publicando uma nova release
+## 📦 Fluxo de Release
 
-### 1. Atualize a versão
+As releases são automatizadas via GitHub Actions.
 
-Defina a tag semântica seguindo [SemVer](https://semver.org/):
-
-| Tipo de mudança             | Exemplo       |
-|-----------------------------|---------------|
-| Correção de bug             | `v0.1.1`      |
-| Nova funcionalidade         | `v0.2.0`      |
-| Breaking change             | `v1.0.0`      |
-
-### 2. Crie a tag e faça push
-
-```bash
-git tag v0.2.0
-git push origin main --tags
-```
-
-### 3. Release automática
-
-O **GitHub Actions** faz o resto automaticamente:
-1. Compila o binário para `linux/amd64` com a versão embutida
-2. Cria a GitHub Release com o binário anexado
-3. Release notes são geradas automaticamente
-
-### 4. Verifique
-
-Acesse: https://github.com/rduarte/skl/releases
-
-Usuários finais atualizam com:
-```bash
-skl upgrade
-```
+1. **Tagging**: Crie uma tag seguindo o versionamento semântico:
+   ```bash
+   git tag v0.4.5
+   git push origin v0.4.5
+   ```
+2. **Automação**: O workflow `.github/workflows/release.yml` irá compilar o binário, injetar a versão via `ldflags` e criar a release no GitHub.
+3. **Pós-Release**: O comando `skl upgrade` dos usuários passará a detectar a nova versão em poucos segundos.
 
 ---
 
-## Build com versão customizada
+## 🧪 Boas Práticas
 
-```bash
-# Build local com versão
-make build VERSION=v0.2.0-beta
-
-# Verificar
-./skl --version
-# skl version v0.2.0-beta
-```
-
-A versão é injetada via `-ldflags` no build:
-```
--X github.com/rduarte/skl/cmd.Version=$(VERSION)
-```
+- **Commits Semânticos**: Use `feat:`, `fix:`, `refactor:`, `docs:` para manter o histórico organizado.
+- **Timeouts**: Comandos que fazem rede (como `list` ou `upgrade`) devem sempre respeitar os timeouts definidos (geralmente entre 1.5s e 10s) para não travar a experiência do usuário.
+- **Silêncio é Ouro**: Comandos de automação (como `setup` ou `upgrade`) devem ser o mais silenciosos possível, imprimindo apenas o estritamente necessário.
 
 ---
 
-## Arquitetura de decisões
+## 💡 Sugestões de Melhorias?
 
-| Decisão | Justificativa |
-|---|---|
-| **Cobra** para CLI | Framework padrão do ecossistema Go, auto gera help e completions |
-| **Sparse-checkout** | Baixa apenas o diretório da skill, não o repo inteiro |
-| `--depth=1` + `--filter=blob:none` | Minimiza tráfego de rede e uso de disco |
-| **SSH por padrão** | Aproveita credenciais já configuradas no ambiente do dev |
-| **Provider registry** | Adicionar provider = 1 arquivo, zero mudanças no código existente |
-| **`sklfile.json`** | Manifesto simples e legível, inspirado em composer.json |
-| **Self-update** | Consulta GitHub API, baixa binário e substitui in-place |
+Abra uma **Issue** ou um **Pull Request**. Valorizamos simplicidade, velocidade e design minimalista. ⚡

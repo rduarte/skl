@@ -32,16 +32,56 @@ Uso com referência remota (sem instalar):
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		lock, err := manifest.LoadLock()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
 		var suggestions []string
-		for source := range lock.Skills {
-			name := manifest.SkillName(source)
-			if strings.HasPrefix(name, toComplete) {
-				suggestions = append(suggestions, name)
+
+		if strings.Contains(toComplete, "@") {
+			parts := strings.Split(toComplete, "/")
+
+			var ref *parser.SkillRef
+			var refStr string
+
+			if len(parts) >= 3 {
+				// case: provider@user/repo/skill-prefix
+				refStr = strings.Join(parts[:len(parts)-1], "/") + "/"
+				r, err := parser.Parse(refStr + "dummy")
+				if err == nil {
+					ref = r
+				}
+			} else if len(parts) == 2 {
+				// case: provider@user/repo (missing trailing slash)
+				// we try to parse it as a repo to get user/repo
+				r, err := parser.ParseRepo(toComplete)
+				if err == nil {
+					refStr = toComplete + "/"
+					ref = &parser.SkillRef{
+						Provider: r.Provider,
+						User:     r.User,
+						Repo:     r.Repo,
+						Tag:      r.Tag,
+					}
+				}
+			}
+
+			if ref != nil {
+				prov, err := provider.New(ref.Provider)
+				if err == nil {
+					cat, err := catalog.Fetch(prov, ref.User, ref.Repo, ref.Tag)
+					if err == nil && cat != nil {
+						for _, entry := range cat.Skills {
+							suggestions = append(suggestions, refStr+entry.ID)
+						}
+					}
+				}
+			}
+		} else {
+			lock, err := manifest.LoadLock()
+			if err == nil && lock != nil {
+				for source := range lock.Skills {
+					name := manifest.SkillName(source)
+					if strings.HasPrefix(name, toComplete) {
+						suggestions = append(suggestions, name)
+					}
+				}
 			}
 		}
 

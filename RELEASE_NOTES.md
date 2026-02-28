@@ -4,6 +4,12 @@ Este arquivo documenta o histórico de versões do **skl**.
 
 ---
 
+## [[v0.5.5]](https://github.com/rduarte/skl/releases/tag/v0.5.5) — 2026-02-28
+### 🚀 Novas Funcionalidades
+- **Autocompletar Remoto no `info`**: O comando `skl info` agora suporta autocompletar dinâmico para skills remotas usando repositórios que possuem `catalog.json` (comportamento similar ao `install`).
+
+---
+
 ## [[v0.5.4]](https://github.com/rduarte/skl/releases/tag/v0.5.4) — 2026-02-26
 ### 🚀 Novas Funcionalidades
 - **Descoberta Automática de Skills no `list`**: Agora o comando `skl list` consegue listar conteúdos mesmo em repositórios que não possuem o arquivo `catalog.json`.
